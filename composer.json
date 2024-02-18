@@ -1,0 +1,20 @@
+{
+    "name": "battis/php-generator",
+    "description": "Generate PHP code dynamically",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Seth Battis",
+            "email": "seth@battis.net"
+        }
+    ],
+    "require": {
+        "league/html-to-markdown": "^5.1",
+        "battis/data-utilities": "^1.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Battis\\PHPGenerator\\": "src"
+        }
+    }
+}

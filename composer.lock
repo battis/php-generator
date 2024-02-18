@@ -1,0 +1,191 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "d67892ac9319239d63cae49a5bbc2daf",
+    "packages": [
+        {
+            "name": "battis/data-utilities",
+            "version": "v1.2.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/battis/data-utilities.git",
+                "reference": "9bf8dc8385a8563b2a7a6534eedd3c359acb90de"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/battis/data-utilities/zipball/9bf8dc8385a8563b2a7a6534eedd3c359acb90de",
+                "reference": "9bf8dc8385a8563b2a7a6534eedd3c359acb90de",
+                "shasum": ""
+            },
+            "require": {
+                "battis/hydratable": "^0.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^11.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Battis\\DataUtilities\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Seth Battis",
+                    "email": "sethbattis@stmarksschool.org"
+                }
+            ],
+            "description": "A handful of useful helper functions to process data",
+            "support": {
+                "issues": "https://github.com/battis/data-utilities/issues",
+                "source": "https://github.com/battis/data-utilities/tree/v1.2.6"
+            },
+            "time": "2024-02-18T20:14:24+00:00"
+        },
+        {
+            "name": "battis/hydratable",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/battis/hydratable.git",
+                "reference": "a8ab2428b070dbe1f2143c7783898237727f3c79"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/battis/hydratable/zipball/a8ab2428b070dbe1f2143c7783898237727f3c79",
+                "reference": "a8ab2428b070dbe1f2143c7783898237727f3c79",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Battis\\Hydratable\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0"
+            ],
+            "authors": [
+                {
+                    "name": "Seth Battis",
+                    "email": "seth@battis.net"
+                }
+            ],
+            "description": "Hydrate serialized objects with defaults and overrides",
+            "support": {
+                "issues": "https://github.com/battis/hydratable/issues",
+                "source": "https://github.com/battis/hydratable/tree/v0.1.1"
+            },
+            "time": "2023-07-04T21:21:58+00:00"
+        },
+        {
+            "name": "league/html-to-markdown",
+            "version": "5.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/html-to-markdown.git",
+                "reference": "0b4066eede55c48f38bcee4fb8f0aa85654390fd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/html-to-markdown/zipball/0b4066eede55c48f38bcee4fb8f0aa85654390fd",
+                "reference": "0b4066eede55c48f38bcee4fb8f0aa85654390fd",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-xml": "*",
+                "php": "^7.2.5 || ^8.0"
+            },
+            "require-dev": {
+                "mikehaertl/php-shellcommand": "^1.1.0",
+                "phpstan/phpstan": "^1.8.8",
+                "phpunit/phpunit": "^8.5 || ^9.2",
+                "scrutinizer/ocular": "^1.6",
+                "unleashedtech/php-coding-standard": "^2.7 || ^3.0",
+                "vimeo/psalm": "^4.22 || ^5.0"
+            },
+            "bin": [
+                "bin/html-to-markdown"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "5.2-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "League\\HTMLToMarkdown\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Colin O'Dell",
+                    "email": "colinodell@gmail.com",
+                    "homepage": "https://www.colinodell.com",
+                    "role": "Lead Developer"
+                },
+                {
+                    "name": "Nick Cernis",
+                    "email": "nick@cern.is",
+                    "homepage": "http://modernnerd.net",
+                    "role": "Original Author"
+                }
+            ],
+            "description": "An HTML-to-markdown conversion helper for PHP",
+            "homepage": "https://github.com/thephpleague/html-to-markdown",
+            "keywords": [
+                "html",
+                "markdown"
+            ],
+            "support": {
+                "issues": "https://github.com/thephpleague/html-to-markdown/issues",
+                "source": "https://github.com/thephpleague/html-to-markdown/tree/5.1.1"
+            },
+            "funding": [
+                {
+                    "url": "https://www.colinodell.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://www.paypal.me/colinpodell/10.00",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/colinodell",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/league/html-to-markdown",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2023-07-12T21:21:09+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
+}
