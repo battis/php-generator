@@ -3,11 +3,11 @@
 namespace Battis\PHPGenerator;
 
 abstract class Base {
-    protected const TYPE_SHORT = 0; 
-    protected const TYPE_FQN = 1;
-    protected const TYPE_ABSOLUTE = 3;
+    public const TYPE_SHORT = 0; 
+    public const TYPE_FQN = 1;
+    public const TYPE_ABSOLUTE = 3;
     
-    protected function typeAs(string $type, int $flags = self::TYPE_FQN): string
+    public static function typeAs(string $type, int $flags = self::TYPE_FQN): string
     {
         if ($flags & self::TYPE_FQN) {
             $t = preg_replace("/(.+)\\[\]$/", "$1", $type);
