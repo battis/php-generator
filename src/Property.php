@@ -47,17 +47,8 @@ class Property extends Base
     {
         return $this->documentationOnly;
     }
-
-    public static function documentationOnly(string $name, string $docType, ?string $description = null): Property
-    {
-        $property = new Property();
-        $property->name = $name;
-        $property->docType = $docType;
-        $property->description = $description;
-        $property->documentationOnly = true;
-        return $property;
-    }
-    public static function private(string $name, string $type, ?string $description = null, ?string $defaultValue = null): Property
+    
+    public static function private(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $documentationOnly = false): Property
     {
         $property = new Property();
         $property->name = $name;
@@ -65,21 +56,47 @@ class Property extends Base
         $property->description = $description;
         $property->defaultValue = $defaultValue;
         $property->access = 'private';
-        $property->static = true;
+        $property->documentationOnly = $documentationOnly;
         return $property;
     }
 
-    public static function protectedStatic(string $name, string $type, ?string $description = null, ?string $defaultValue = null): Property
+    public static function privateStatic(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $documentationOnly = false): Property
     {
-        $property = self::private($name, $type, $description, $defaultValue);
-        $property->access = 'protected';
+        $property = self::private($name, $type, $description, $defaultValue, $documentationOnly);
         $property->static = true;
         return $property;
     }
 
+    public static function protected(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $documentationOnly = false): Property
+    {
+        $property = self::private($name, $type, $description, $defaultValue, $documentationOnly);
+        $property->access = 'protected';
+        return $property;
+    }
+
+    public static function protectedStatic(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $documentationOnly = false): Property
+    {
+        $property = self::protected($name, $type, $description, $defaultValue, $documentationOnly);
+        $property->static = true;
+        return $property;
+    }
+    
+    public static function public(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $documentationOnly = false): Property
+    {
+        $property = self::private($name, $type, $description, $defaultValue, $documentationOnly);
+        $property->access = 'public';
+        return $property;
+    }
+
+    public static function publicStatic(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $documentationOnly = false): Property
+    {
+        $property = self::public($name, $type, $description, $defaultValue, $documentationOnly);
+        $property->static = true;
+        return $property;
+    }
     public function asPHPDocProperty(): string
     {
-        return trim("@property " . ($this->docType ?? $this->type) . " \$$this->name $this->description");
+        return trim("@property " . $this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . " \$$this->name $this->description");
     }
 
     /**
