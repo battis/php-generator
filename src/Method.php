@@ -14,19 +14,23 @@ class Method extends Base
 
     protected bool $static = false;
 
-    protected ?string $description;
+    protected ?string $description = null;
 
-    protected string $name;
+    protected string $name = "";
 
     /**
      * @var Parameter[] $parameters;
      */
-    protected array $parameters;
+    protected array $parameters = [];
 
     /** @var string $body */
-    protected string $body;
+    protected string $body = "";
 
     protected ReturnType $returnType;
+
+    public function __construct() {
+        $this->returnType = ReturnType::from('void');
+    }
 
     /**
      * @var ReturnType[] $throws
@@ -57,10 +61,21 @@ class Method extends Base
     }
 
     /**
-     * @param Parameter[] $parameters
+     * @param string $name
+     * @param ReturnType $returnType
+     * @param string $body
+     * @param ?string $description (Optional)
+     * @param Parameter[] $parameters (Optional)
+     * @param ReturnType[] $throws (Optional)
      */
-    public static function private(string $name, ReturnType $returnType, string $body, ?string $description =  null, array $parameters = [], array $throws = []): Method
-    {
+    public static function private(
+        string $name, 
+        ReturnType $returnType, 
+        string $body, 
+        ?string $description =  null, 
+        array $parameters = [], 
+        array $throws = []
+    ): Method {
         $method = new Method();
         $method->name = $name;
         $method->access = 'private';
@@ -72,6 +87,14 @@ class Method extends Base
         return $method;
     }
 
+    /**
+     * @param string $name
+     * @param ReturnType $returnType
+     * @param string $body
+     * @param ?string $description (Optional)
+     * @param Parameter[] $parameters (Optional)
+     * @param ReturnType[] $throws (Optional)
+     */
     public static function privateStatic(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
     {
         $method = self::private($name, $returnType, $body, $description, $parameters, $throws);
@@ -79,6 +102,14 @@ class Method extends Base
         return $method;
     }
 
+    /**
+     * @param string $name
+     * @param ReturnType $returnType
+     * @param string $body
+     * @param ?string $description (Optional)
+     * @param Parameter[] $parameters (Optional)
+     * @param ReturnType[] $throws (Optional)
+     */
     public static function protected(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
     {
         $method = self::private($name, $returnType, $body, $description, $parameters, $throws);
@@ -86,6 +117,14 @@ class Method extends Base
         return $method;
     }
     
+    /**
+     * @param string $name
+     * @param ReturnType $returnType
+     * @param string $body
+     * @param ?string $description (Optional)
+     * @param Parameter[] $parameters (Optional)
+     * @param ReturnType[] $throws (Optional)
+     */
     public static function protectedStatic(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
     {
         $method = self::protected($name, $returnType, $body, $description, $parameters, $throws);
@@ -93,6 +132,14 @@ class Method extends Base
         return $method;
     }
 
+    /**
+     * @param string $name
+     * @param ReturnType $returnType
+     * @param string $body
+     * @param ?string $description (Optional)
+     * @param Parameter[] $parameters (Optional)
+     * @param ReturnType[] $throws (Optional)
+     */
     public static function public(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
     {
         $method = self::private($name, $returnType, $body, $description, $parameters, $throws);
@@ -100,12 +147,21 @@ class Method extends Base
         return $method;
     }
 
+    /**
+     * @param string $name
+     * @param ReturnType $returnType
+     * @param string $body
+     * @param ?string $description (Optional)
+     * @param Parameter[] $parameters (Optional)
+     * @param ReturnType[] $throws (Optional)
+     */
     public static function publicStatic(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
     {
         $method = self::public($name, $returnType, $body, $description, $parameters, $throws);
         $method->static = true;
         return $method;
     }
+
     /**
      * @param array<string,string> $remap
      *
@@ -115,7 +171,7 @@ class Method extends Base
     {
         $params = [];
         $doc = new Doc();
-        if ($this->description) {
+        if ($this->description !== null) {
             $doc->addItem($this->description);
         }
         foreach($this->parameters as $param) {
@@ -153,13 +209,12 @@ class Method extends Base
     public function asJavascriptStyleImplementation(array $remap = []): string
     {
         $doc = new Doc();
-        if ($this->description) {
+        if ($this->description !== null) {
             $doc->addItem($this->description);
         }
         $optional = true;
         $parameters = [];
         $params = "";
-        $body = $this->body;
 
         $body = $this->body;
         foreach($remap as $type => $alt) {
@@ -190,13 +245,12 @@ class Method extends Base
                 $params[] = "array \$params" . ($optional ? " = []" : "");
             }
             if ($requestBody !== null) {
-                /** @var Parameter $requestBody */
                 $doc->addItem($requestBody->asPHPDocParam());
                 $params[] = $requestBody->asDeclaration($remap);
             }
             $params = empty($params) ? "" : join(", ", $params);
 
-            usort($paramNames, fn($a, $b) => strlen($b) - strlen($a));
+            usort($paramNames, fn(string $a, string $b) => strlen($b) - strlen($a));
             foreach($paramNames as $p) {
                 $body = str_replace("\$$p", "\$params[\"$p\"]", $body);
             }

@@ -13,11 +13,11 @@ class Property extends Base
     
     private bool $nullable = false;
 
-    private string $type;
+    private string $type = "";
 
     private ?string $docType = null;
 
-    private string $name;
+    private string $name = "";
 
     private ?string $description = null;
 
@@ -40,7 +40,7 @@ class Property extends Base
         return $this->defaultValue;
     }
 
-    public function setDocType(string $docType)
+    public function setDocType(string $docType): void
     {
         $this->docType = $docType;
     }
@@ -111,6 +111,6 @@ class Property extends Base
     {
         $doc = new Doc();
         $doc->addItem(trim("@var " . ($this->nullable ? "?" :""). $this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . " \$$this->name $this->description"));
-        return $doc->asString() . "$this->access " . ($this->static ? "static " : "") . ($this->nullable ? "?" :"").($remap[$this->type] ?? $this->typeAs($this->type, self::TYPE_SHORT)) . " \$$this->name" . (empty($this->defaultValue) ? "" : " = $this->defaultValue") . ";" . PHP_EOL;
+        return $doc->asString() . "$this->access " . ($this->static ? "static " : "") . ($this->nullable ? "?" :"").($remap[$this->type] ?? $this->typeAs($this->type, self::TYPE_SHORT)) . " \$$this->name" . ($this->defaultValue===null ? "" : " = $this->defaultValue") . ";" . PHP_EOL;
     }
 }

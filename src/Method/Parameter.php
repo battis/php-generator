@@ -6,13 +6,13 @@ use Battis\PHPGenerator\Base;
 
 class Parameter extends Base
 {
-    private string $name;
+    private string $name = "";
 
-    private string $type;
+    private string $type = "";
 
     private ?string $docType = null;
 
-    private ?string $description;
+    private ?string $description =  null;
 
     private bool $optional = false;
 
@@ -21,7 +21,7 @@ class Parameter extends Base
         return $this->optional;
     }
 
-    public function setDocType(string $docType)
+    public function setDocType(string $docType): void
     {
         $this->docType = $docType;
     }

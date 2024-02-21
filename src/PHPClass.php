@@ -74,7 +74,7 @@ class PHPClass extends Base
         return null;
     }
 
-    public function removeMethod(Method $method)
+    public function removeMethod(Method $method): void
     {
         // TODO do we need to be more discerning than just matching by method name? PHP is not.
         $this->methods = array_filter($this->methods, fn(Method $m) => $m->getName() !== $method->getName());

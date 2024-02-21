@@ -6,13 +6,13 @@ use Battis\PHPGenerator\Base;
 
 class ReturnType extends Base
 {
-    private string $type;
+    private string $type = "";
 
-    private ?string $docType;
+    private ?string $docType = null;
     
     private bool $nullable = false;
 
-    private ?string $description;
+    private ?string $description = null;
 
     public static function from(string $type, ?string $description = null, ?string $docType = null, bool $nullable = false): ReturnType
     {
@@ -36,11 +36,11 @@ class ReturnType extends Base
 
     public function asPHPDocReturn(): string
     {
-        return "@return " . ($this->nullable ? "?":"").$this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . ($this->description ? " $this->description" : "");
+        return "@return " . ($this->nullable ? "?":"").$this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . ($this->description !== null ?  $this->description : "");
     }
 
     public function asPHPDocThrows(): string
     {
-        return "@throws " . ($this->nullable ? "?":"").$this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . ($this->description ? " $this->description" : "");
+        return "@throws " . ($this->nullable ? "?":"").$this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . ($this->description !== null ?  $this->description : "");
     }
 }
