@@ -59,16 +59,44 @@ class Method extends Base
     /**
      * @param Parameter[] $parameters
      */
-    public static function public(string $name, ReturnType $returnType, string $body, ?string $description =  null, array $parameters = [], array $throws = []): Method
+    public static function private(string $name, ReturnType $returnType, string $body, ?string $description =  null, array $parameters = [], array $throws = []): Method
     {
         $method = new Method();
         $method->name = $name;
-        $method->access = 'public';
+        $method->access = 'private';
         $method->returnType = $returnType;
         $method->body = $body;
         $method->description = $description;
         $method->parameters = $parameters;
         $method->throws = $throws;
+        return $method;
+    }
+
+    public static function privateStatic(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
+    {
+        $method = self::private($name, $returnType, $body, $description, $parameters, $throws);
+        $method->static = true;
+        return $method;
+    }
+
+    public static function protected(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
+    {
+        $method = self::private($name, $returnType, $body, $description, $parameters, $throws);
+        $method->access="protected";
+        return $method;
+    }
+    
+    public static function protectedStatic(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
+    {
+        $method = self::protected($name, $returnType, $body, $description, $parameters, $throws);
+        $method->static = true;
+        return $method;
+    }
+
+    public static function public(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
+    {
+        $method = self::private($name, $returnType, $body, $description, $parameters, $throws);
+        $method->access="public";
         return $method;
     }
 
@@ -78,7 +106,6 @@ class Method extends Base
         $method->static = true;
         return $method;
     }
-
     /**
      * @param array<string,string> $remap
      *
