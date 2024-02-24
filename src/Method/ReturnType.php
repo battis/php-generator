@@ -2,45 +2,47 @@
 
 namespace Battis\PHPGenerator\Method;
 
-use Battis\PHPGenerator\Base;
+use Battis\PHPGenerator\Type;
 
-class ReturnType extends Base
+class ReturnType
 {
-    private string $type = "";
+    public const NONE = 0;
+    public const NULLABLE = 1;
 
-    private ?string $docType = null;
-    
-    private bool $nullable = false;
+    private Type $type;
 
-    private ?string $description = null;
+    private ?string $description;
 
-    public static function from(string $type, ?string $description = null, ?string $docType = null, bool $nullable = false): ReturnType
+    private int $flags;
+
+    /**
+     * @param string|\Battis\PHPGenerator\Type $type
+     * @param string $description
+     * @param int $flags
+     */
+    public function __construct($type = "void", ?string $description = null, int $flags = self::NONE)
     {
-        $returnType = new ReturnType();
-        $returnType->type = $type;
-        $returnType->description = $description;
-        $returnType->docType = $docType;
-        $returnType->nullable = $nullable;
-        return $returnType;
+        $this->type = $type instanceof Type ? $type : new Type($type);
+        $this->description = $description;
+        $this->flags = $flags;
     }
 
-    public function getType(): string
+    public function getType(): Type
     {
         return $this->type;
     }
 
-    public function getDocType(): ?string
-    {
-        return $this->docType;
-    }
-
     public function asPHPDocReturn(): string
     {
-        return "@return " . ($this->nullable ? "?":"").$this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . ($this->description !== null ?  $this->description : "");
+        return "@return " .
+            (($this->flags & self::NULLABLE) ? ($this->type->isMixed() ? "null|" : "?") : "") . $this->type->as(Type::ABSOLUTE) .
+            ($this->description !== null ? " $this->description" : "");
     }
 
     public function asPHPDocThrows(): string
     {
-        return "@throws " . ($this->nullable ? "?":"").$this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . ($this->description !== null ?  $this->description : "");
+        return "@throws " .
+            $this->type->as(Type::ABSOLUTE) .
+            ($this->description !== null ? " $this->description" : "");
     }
 }

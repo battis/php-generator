@@ -1,0 +1,9 @@
+{
+  "actions" : {
+    "build" : {
+      "enabled" : true,
+      "script" : "tools\/psalm"
+    }
+  },
+  "openLogOnRun" : "start"
+}

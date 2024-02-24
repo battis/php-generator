@@ -2,28 +2,48 @@
 
 namespace Battis\PHPGenerator;
 
-class Property extends Base
+class Property
 {
+    public const NONE = 0;
+    public const STATIC = 1;
+    public const NULLABLE = 2;
+    public const DOCUMENTATION_ONLY = 4;
+
+    private Access $access;
+
+    private Type $type;
+
+    private string $name;
+
+    private ?string $description;
+
+    private ?string $defaultValue;
+
+    private int $flags;
+
     /**
-     * @var 'public'|'protected'|'private' $access
+     * @param Access $access
+     * @param string $name
+     * @param string|\Battis\PHPGenerator\Type $type
+     * @param ?string $description
+     * @param ?string $defaultValue
+     * @param int $flags
      */
-    private string $access = 'public';
-
-    private bool $static = false;
-    
-    private bool $nullable = false;
-
-    private string $type = "";
-
-    private ?string $docType = null;
-
-    private string $name = "";
-
-    private ?string $description = null;
-
-    private ?string $defaultValue = null;
-
-    private bool $documentationOnly = false;
+    public function __construct(
+        Access $access,
+        string $name,
+        $type,
+        ?string $description = null,
+        ?string $defaultValue = null,
+        $flags = self::NONE
+    ) {
+        $this->access = $access;
+        $this->name = $name;
+        $this->type = is_string($type) ? new Type($type) : $type;
+        $this->description = $description;
+        $this->defaultValue = $defaultValue;
+        $this->flags = $flags;
+    }
 
     public function equals(Property $other): bool
     {
@@ -40,66 +60,19 @@ class Property extends Base
         return $this->defaultValue;
     }
 
-    public function setDocType(string $docType): void
-    {
-        $this->docType = $docType;
-    }
-
     public function isDocumentationOnly(): bool
     {
-        return $this->documentationOnly;
-    }
-    
-    public static function private(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $nullable = false, bool $documentationOnly = false): Property
-    {
-        $property = new Property();
-        $property->name = $name;
-        $property->type = $type;
-        $property->nullable = $nullable;
-        $property->description = $description;
-        $property->defaultValue = $defaultValue;
-        $property->access = 'private';
-        $property->documentationOnly = $documentationOnly;
-        return $property;
+        return ($this->flags & self::DOCUMENTATION_ONLY) == true;
     }
 
-    public static function privateStatic(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $nullable = false,bool $documentationOnly = false): Property
-    {
-        $property = self::private($name, $type, $description, $defaultValue,$nullable, $documentationOnly);
-        $property->static = true;
-        return $property;
-    }
-
-    public static function protected(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $nullable = false,bool $documentationOnly = false): Property
-    {
-        $property = self::private($name, $type, $description, $defaultValue,$nullable, $documentationOnly);
-        $property->access = 'protected';
-        return $property;
-    }
-
-    public static function protectedStatic(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $nullable = false,bool $documentationOnly = false): Property
-    {
-        $property = self::protected($name, $type, $description, $defaultValue, $nullable, $documentationOnly);
-        $property->static = true;
-        return $property;
-    }
-    
-    public static function public(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $nullable = false,bool $documentationOnly = false): Property
-    {
-        $property = self::private($name, $type, $description, $defaultValue, $nullable,$documentationOnly);
-        $property->access = 'public';
-        return $property;
-    }
-
-    public static function publicStatic(string $name, string $type, ?string $description = null, ?string $defaultValue = null, bool $nullable = false,bool $documentationOnly = false): Property
-    {
-        $property = self::public($name, $type, $description, $defaultValue, $nullable, $documentationOnly);
-        $property->static = true;
-        return $property;
-    }
     public function asPHPDocProperty(): string
     {
-        return trim("@property " . ($this->nullable ? "?" :"").$this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . " \$$this->name $this->description");
+        return trim(
+            "@property " .
+            ($this->flags & self::NULLABLE ? ($this->type->isMixed() ? "null|" : "?") : "") .
+            $this->type->as(Type::ABSOLUTE) .
+            " \$$this->name $this->description"
+        );
     }
 
     /**
@@ -110,7 +83,22 @@ class Property extends Base
     public function asDeclaration(array $remap = []): string
     {
         $doc = new Doc();
-        $doc->addItem(trim("@var " . ($this->nullable ? "?" :""). $this->typeAs($this->docType ?? $this->type, self::TYPE_ABSOLUTE) . " \$$this->name $this->description"));
-        return $doc->asString() . "$this->access " . ($this->static ? "static " : "") . ($this->nullable ? "?" :"").($remap[$this->type] ?? $this->typeAs($this->type, self::TYPE_SHORT)) . " \$$this->name" . ($this->defaultValue===null ? "" : " = $this->defaultValue") . ";" . PHP_EOL;
+        $doc->addItem(
+            "@var " .
+            ($this->flags & self::NULLABLE ? ($this->type->isMixed() ? "null|" : "?") : "") .
+            $this->type->as(Type::ABSOLUTE) .
+            " \$$this->name" .
+            ($this->description !== null ? " $this->description" : "")
+        );
+        return $doc->asString() .
+          "{$this->access->value} " .
+          ($this->flags & self::STATIC ? "static " : "") .
+          ($this->flags & self::NULLABLE ? "?" : "") .
+          ($remap[$this->type->as(Type::FQN)] ??
+            $this->type->as(Type::PHP | Type::SHORT)) .
+          " \$$this->name" .
+          ($this->defaultValue === null ? "" : " = $this->defaultValue") .
+          ";" .
+          PHP_EOL;
     }
 }

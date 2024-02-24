@@ -2,40 +2,97 @@
 
 namespace Battis\PHPGenerator;
 
+use Battis\PHPGenerator\Exceptions\PHPGeneratorException;
 use Battis\PHPGenerator\Method\Parameter;
 use Battis\PHPGenerator\Method\ReturnType;
 
-class Method extends Base
+class Method
 {
-    /**
-     * @var 'public'|'protected'|'private' $access
-     */
-    protected string $access = "public";
+    public const NONE = 0;
+    public const STATIC = 1;
+    public const ABSTRACT = 2;
+    public const API = 4;
+    public const DOCUMENTATION_ONLY = 8;
 
-    protected bool $static = false;
+    protected Access $access;
 
-    protected ?string $description = null;
+    protected int $flags;
 
-    protected string $name = "";
+    protected ?string $description;
+
+    protected string $name;
 
     /**
      * @var Parameter[] $parameters;
      */
-    protected array $parameters = [];
+    protected array $parameters;
 
-    /** @var string $body */
-    protected string $body = "";
+    protected ?string $body;
 
     protected ReturnType $returnType;
 
-    public function __construct() {
-        $this->returnType = ReturnType::from('void');
-    }
-
     /**
-     * @var ReturnType[] $throws
+     * @var \Battis\PHPGenerator\Method\ReturnType[] $throws
      */
     protected array $throws = [];
+
+    /**
+     * @param \Battis\PHPGenerator\Access $access
+     * @param string $name
+     * @param Parameter[] $parameters
+     * @param null|string|\Battis\PHPGenerator\Type|\Battis\PHPGenerator\Method\ReturnType $returnType
+     * @param ?string $body
+     * @param ?string $description
+     * @param string[]|\Battis\PHPGenerator\Type[]|\Battis\PHPGenerator\Method\ReturnType[] $throws
+     * @param int $flags
+     */
+    public function __construct(
+        Access $access,
+        string $name,
+        array $parameters = [],
+        $returnType = null,
+        ?string $body = null,
+        ?string $description = null,
+        array $throws = [],
+        int $flags = self::NONE
+    ) {
+        $this->access = $access;
+        $this->name = $name;
+        $this->parameters = $parameters;
+        $this->returnType =
+          $returnType instanceof ReturnType
+            ? $returnType
+            : new ReturnType($returnType);
+        $this->body = $body;
+        $this->description = $description;
+        $this->throws = array_map(
+            /**
+             * @$param string|\Battis\PHPGenerator\Type|\Battis\PHPGenerator\Method\ReturnType $throw
+             * @return \Battis\PHPGenerator\Method\ReturnType
+             */
+            function ($throw) {
+                if ($throw instanceof ReturnType) {
+                    return $throw;
+                }
+                return new ReturnType($throw);
+            },
+            $throws
+        );
+        $this->flags = $flags;
+
+        assert(
+            !($flags & self::ABSTRACT && $flags & self::STATIC),
+            new PHPGeneratorException("PHP does not support abstract static methods")
+        );
+        assert(
+            !($flags & self::ABSTRACT && $this->body !== null),
+            new PHPGeneratorException("Abstract methods may not have bodies")
+        );
+        assert(
+            !($flags & self::ABSTRACT && $this->access === Access::Private),
+            new PHPGeneratorException("Private methods may not be abstract")
+        );
+    }
 
     public function getName(): string
     {
@@ -60,211 +117,105 @@ class Method extends Base
         $this->parameters[] = $parameter;
     }
 
-    /**
-     * @param string $name
-     * @param ReturnType $returnType
-     * @param string $body
-     * @param ?string $description (Optional)
-     * @param Parameter[] $parameters (Optional)
-     * @param ReturnType[] $throws (Optional)
-     */
-    public static function private(
-        string $name, 
-        ReturnType $returnType, 
-        string $body, 
-        ?string $description =  null, 
-        array $parameters = [], 
-        array $throws = []
-    ): Method {
-        $method = new Method();
-        $method->name = $name;
-        $method->access = 'private';
-        $method->returnType = $returnType;
-        $method->body = $body;
-        $method->description = $description;
-        $method->parameters = $parameters;
-        $method->throws = $throws;
-        return $method;
+    public function asPHPDocMethod(): string
+    {
+        assert($this->access === Access::Public, new PHPGeneratorException("Non-public documentation-only magic methods cannot exist"));
+        assert(
+            $this->flags & self::DOCUMENTATION_ONLY,
+            new Exceptions\PHPGeneratorException(
+                "{$this->name}() must be implemented"
+            )
+        );
+        assert(
+            $this->flags & self::ABSTRACT,
+            new Exceptions\PHPGeneratorException(
+                "{$this->name}() is abstract and cannot be a documentation-only magic method"
+            )
+        );
+        return "@method " .
+          ($this->flags & self::STATIC ? "static " : "") .
+          $this->returnType->getType()->as(Type::ABSOLUTE) .
+          " $this->name(" .
+          join(
+              ", ",
+              array_map(
+                  fn(Parameter $parameter) => $parameter
+                  ->getType()
+                  ->as(Type::ABSOLUTE) .
+                  " " .
+                  $parameter->getName(),
+                  $this->parameters
+              )
+          ) .
+          ")" .
+          ($this->description !== null ? " $this->description" : "");
     }
 
     /**
-     * @param string $name
-     * @param ReturnType $returnType
-     * @param string $body
-     * @param ?string $description (Optional)
-     * @param Parameter[] $parameters (Optional)
-     * @param ReturnType[] $throws (Optional)
-     */
-    public static function privateStatic(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
-    {
-        $method = self::private($name, $returnType, $body, $description, $parameters, $throws);
-        $method->static = true;
-        return $method;
-    }
-
-    /**
-     * @param string $name
-     * @param ReturnType $returnType
-     * @param string $body
-     * @param ?string $description (Optional)
-     * @param Parameter[] $parameters (Optional)
-     * @param ReturnType[] $throws (Optional)
-     */
-    public static function protected(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
-    {
-        $method = self::private($name, $returnType, $body, $description, $parameters, $throws);
-        $method->access="protected";
-        return $method;
-    }
-    
-    /**
-     * @param string $name
-     * @param ReturnType $returnType
-     * @param string $body
-     * @param ?string $description (Optional)
-     * @param Parameter[] $parameters (Optional)
-     * @param ReturnType[] $throws (Optional)
-     */
-    public static function protectedStatic(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
-    {
-        $method = self::protected($name, $returnType, $body, $description, $parameters, $throws);
-        $method->static = true;
-        return $method;
-    }
-
-    /**
-     * @param string $name
-     * @param ReturnType $returnType
-     * @param string $body
-     * @param ?string $description (Optional)
-     * @param Parameter[] $parameters (Optional)
-     * @param ReturnType[] $throws (Optional)
-     */
-    public static function public(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
-    {
-        $method = self::private($name, $returnType, $body, $description, $parameters, $throws);
-        $method->access="public";
-        return $method;
-    }
-
-    /**
-     * @param string $name
-     * @param ReturnType $returnType
-     * @param string $body
-     * @param ?string $description (Optional)
-     * @param Parameter[] $parameters (Optional)
-     * @param ReturnType[] $throws (Optional)
-     */
-    public static function publicStatic(string $name, ReturnType $returnType, string $body, ?string $description = null, array $parameters = [], array $throws = []): Method
-    {
-        $method = self::public($name, $returnType, $body, $description, $parameters, $throws);
-        $method->static = true;
-        return $method;
-    }
-
-    /**
-     * @param array<string,string> $remap
+     * @param array<string, string> $remap [FQN => Short]
      *
      * @return string
      */
     public function asImplementation(array $remap = []): string
     {
+        assert(
+            ($this->flags & self::DOCUMENTATION_ONLY) === 0,
+            new Exceptions\PHPGeneratorException(
+                "{$this->name}() is a documentation-only magic method"
+            )
+        );
         $params = [];
         $doc = new Doc();
         if ($this->description !== null) {
             $doc->addItem($this->description);
         }
-        foreach($this->parameters as $param) {
+        foreach ($this->parameters as $param) {
             $params[] = $param->asDeclaration($remap);
             $doc->addItem($param->asPHPDocParam());
         }
         // TODO order parameters with required first
         $doc->addItem($this->returnType->asPHPDocReturn());
-        foreach($this->throws as $throw) {
+        foreach ($this->throws as $throw) {
             $doc->addItem($throw->asPHPDocThrows());
         }
-        $doc->addItem("@api");
+
+        if ($this->flags & self::API) {
+            $doc->addItem("@api");
+        }
 
         $body = $this->body;
-        foreach($remap as $type => $alt) {
-            $newBody = preg_replace("/(\W)(" . $this->typeAs($type, self::TYPE_SHORT) . ")(\W)/m", "$1$alt$3", $body);
-            if ($newBody !== $body) {
-                $body = $newBody;
-                error_log("Dangerously remapping `" . $this->typeAs($type, self::TYPE_SHORT) . "` as `$alt` in {$this->name}()");
-            }
-        }
-
-        return $doc->asString(1) .
-            "$this->access " . ($this->static ? "static " : "") . "function $this->name(" . join(", ", $params) . "):" . ($remap[$this->returnType->getType()] ?? $this->typeAs($this->returnType->getType(), self::TYPE_SHORT)) . PHP_EOL .
-            "{" . PHP_EOL .
-            $body . PHP_EOL .
-        "}" . PHP_EOL;
-    }
-
-    /**
-     * @param array<string, string> $remap
-     *
-     * @return string
-     */
-    public function asJavascriptStyleImplementation(array $remap = []): string
-    {
-        $doc = new Doc();
-        if ($this->description !== null) {
-            $doc->addItem($this->description);
-        }
-        $optional = true;
-        $parameters = [];
-        $params = "";
-
-        $body = $this->body;
-        foreach($remap as $type => $alt) {
-            $newBody = preg_replace("/(\W)(" . $this->typeAs($type, self::TYPE_SHORT) . ")(\W)/m", "$1$alt$3", $body);
-            if ($newBody !== $body) {
-                $body = $newBody;
-                error_log("Dangerously remapping `" . $this->typeAs($type, self::TYPE_SHORT) . "` as `$alt` in {$this->name}()");
-            }
-        }
-
-        if (!empty($this->parameters)) {
-            $parametersDoc = [];
-            $requestBody = null;
-            $params = [];
-            $paramNames = [];
-            foreach($this->parameters as $parameter) {
-                if ($parameter->getName() === 'requestBody') {
-                    $requestBody = $parameter;
-                } else {
-                    $parameters[] = $parameter->getName() . ($parameter->isOptional() ? "?" : "") . ": " . $parameter->getType();
-                    $parametersDoc[] = $parameter->getName() . ": " . ($parameter->getDescription() ?? $parameter->getType());
-                    $optional = $optional && $parameter->isOptional();
-                    $paramNames[] = $parameter->getName();
+        if ($body !== null) {
+            foreach ($remap as $type => $alt) {
+                $type = new Type($type);
+                $newBody = preg_replace(
+                    "/(\W)(" . $type->as(Type::SHORT) . ")(\W)/m",
+                    "$1$alt$3",
+                    $body
+                );
+                if ($newBody !== $body) {
+                    $body = $newBody;
+                    error_log(
+                        "Dangerously remapping `" .
+                        $type->as(Type::SHORT) .
+                        "` as `$alt` in {$this->name}()"
+                    );
                 }
             }
-            if (!empty($parameters)) {
-                $doc->addItem("@param array{" . join(", ", $parameters) . "} \$params An associative array" . PHP_EOL . "    - " . join(PHP_EOL . "    - ", $parametersDoc));
-                $params[] = "array \$params" . ($optional ? " = []" : "");
-            }
-            if ($requestBody !== null) {
-                $doc->addItem($requestBody->asPHPDocParam());
-                $params[] = $requestBody->asDeclaration($remap);
-            }
-            $params = empty($params) ? "" : join(", ", $params);
-
-            usort($paramNames, fn(string $a, string $b) => strlen($b) - strlen($a));
-            foreach($paramNames as $p) {
-                $body = str_replace("\$$p", "\$params[\"$p\"]", $body);
-            }
-
         }
-        $doc->addItem($this->returnType->asPHPDocReturn());
-        foreach($this->throws as $throw) {
-            $doc->addItem($throw->asPHPDocThrows());
-        }
-        $doc->addItem('@api');
+
         return $doc->asString(1) .
-            "$this->access " . ($this->static ? "static " : "") . "function $this->name($params): " . ($remap[$this->returnType->getType()] ?? $this->typeAs($this->returnType->getType(), self::TYPE_SHORT)) . PHP_EOL .
-            "{" . PHP_EOL .
-            $body . PHP_EOL .
-        "}" . PHP_EOL;
+          ($this->flags & self::ABSTRACT ? "abstract " : "") .
+          "{$this->access->value} " .
+          ($this->flags & self::STATIC ? "static " : "") .
+          "function $this->name(" .
+          join(", ", $params) .
+          "):" .
+          ($remap[$this->returnType->getType()->as(Type::FQN)] ??
+            $this->returnType->getType()->as(Type::SHORT | Type::PHP)) .
+          PHP_EOL .
+          (($this->flags & self::ABSTRACT) == false
+            ? "{" . PHP_EOL . $body . PHP_EOL . "}"
+            : ";") .
+          PHP_EOL;
     }
 }

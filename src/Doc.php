@@ -2,12 +2,8 @@
 
 namespace Battis\PHPGenerator;
 
-use League\HTMLToMarkdown\HtmlConverter;
-
-class Doc extends Base
+class Doc
 {
-    private static ?HtmlConverter $htmlConverter = null;
-
     /** @var string[] $items */
     private array $items = [];
 
@@ -20,15 +16,6 @@ class Doc extends Base
     {
         // convert any newlines to HTML line breaks
         $item = preg_replace("/[\r\n]/m", "\n\n", $item);
-
-        /// convert any HTML to markdown
-        if (strpos($item, "<") !== false) {
-            if (self::$htmlConverter === null) {
-                self::$htmlConverter = new HtmlConverter();
-            }
-            $item = self::$htmlConverter->convert($item);
-            $item = stripslashes($item);
-        }
 
         // remove multiple newlines
         $item = preg_replace("/[\n\r]+/", "\n", $item);
@@ -48,7 +35,7 @@ class Doc extends Base
         $prevDirective = null;
         $indent = "";
         for($i = 0; $i < $level; $i++) {
-            $indent .= "    ";
+            $indent .= str_repeat(" ", 4);
         }
         $phpdoc = $indent . "/**" . PHP_EOL;
         foreach($this->items as $_item) {
@@ -66,7 +53,7 @@ class Doc extends Base
                 if ($prevDirective !== null && ($directive !== $prevDirective) | $directive === false) {
                     $phpdoc .= "$indent *" . PHP_EOL;
                 }
-                $directiveIndent = $directive !== false ? "  " : "";
+                $directiveIndent = $directive !== false ? str_repeat(" ", 2) : "";
                 $wrapped = false;
                 $w = $width - strlen("$indent * " . ($wrapped ? $directiveIndent : ""));
                 while (strlen($item) > $width) {
