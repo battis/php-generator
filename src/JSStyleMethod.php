@@ -19,7 +19,7 @@ class JSStyleMethod extends Method
         $parameters = [];
         $params = "";
 
-        $body = $this->body;
+        $body = $this->body ?? "";
         foreach($remap as $type => $alt) {
             $newBody = preg_replace("/(\W)(" . (new Type($type))->as(Type::SHORT) . ")(\W)/m", "$1$alt$3", $body);
             if ($newBody !== $body) {
@@ -58,8 +58,8 @@ class JSStyleMethod extends Method
         }
         return $doc->asString(1) .
             "{$this->access->value} " . ($this->flags & Method::STATIC ? "static " : "") . "function $this->name($params): " . ($remap[$this->returnType->getType()->as(Type::SHORT)] ?? $this->returnType->getType()->as(Type::SHORT | Type::PHP)) . PHP_EOL .
-            "{" . PHP_EOL .
-            $body . PHP_EOL .
-        "}" . PHP_EOL;
+            (($this->flags & self::ABSTRACT) == false
+            ? "{" . PHP_EOL . $body . PHP_EOL . "}"
+            : ";")  . PHP_EOL;
     }
 }

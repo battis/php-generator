@@ -40,7 +40,7 @@ class Method
      * @param \Battis\PHPGenerator\Access $access
      * @param string $name
      * @param Parameter[] $parameters
-     * @param null|string|\Battis\PHPGenerator\Type|\Battis\PHPGenerator\Method\ReturnType $returnType
+     * @param string|\Battis\PHPGenerator\Type|\Battis\PHPGenerator\Method\ReturnType $returnType
      * @param ?string $body
      * @param ?string $description
      * @param string[]|\Battis\PHPGenerator\Type[]|\Battis\PHPGenerator\Method\ReturnType[] $throws
@@ -50,7 +50,7 @@ class Method
         Access $access,
         string $name,
         array $parameters = [],
-        $returnType = null,
+        $returnType = "void",
         ?string $body = null,
         ?string $description = null,
         array $throws = [],
@@ -69,6 +69,7 @@ class Method
             /**
              * @$param string|\Battis\PHPGenerator\Type|\Battis\PHPGenerator\Method\ReturnType $throw
              * @return \Battis\PHPGenerator\Method\ReturnType
+             * @psalm-suppress MissingClosureParamType, MixedArgument
              */
             function ($throw) {
                 if ($throw instanceof ReturnType) {
