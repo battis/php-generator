@@ -233,7 +233,9 @@ class PHPClass
           $this->description,
           $other->description,
         ]);
-        $this->uses = array_merge($this->uses, $other->uses);
+        foreach($other->uses as $use) {
+            $this->addUses($use);
+        }
         $this->properties = array_merge($this->properties, $other->properties);
         $this->methods = array_merge($this->methods, $other->methods);
     }
