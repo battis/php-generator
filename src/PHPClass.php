@@ -145,8 +145,8 @@ class PHPClass
         $uses = [];
         $remap = [];
         foreach($this->uses as $use) {
-            if ($use->as(Type::SHORT) === $this->name) {
-                $remap[$use->as(Type::FQN)] = $use->as(Type::SHORT) . "Disambiguate";
+            if (strtolower($use->as(Type::SHORT)) === strtolower($this->name)) {
+                $remap[$use->as(Type::FQN)] = basename(dirname(str_replace('\\','/',$use->as(Type::FQN)))) . '_' .  $use->as(Type::SHORT);
                 $uses[] = "use " . $use->as(Type::FQN) . " as " . $remap[$use->as(Type::FQN)] . ";" . PHP_EOL;
             } else {
                 $uses[] = "use " . $use->as(Type::FQN) . ";" . PHP_EOL;
