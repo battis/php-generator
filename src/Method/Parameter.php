@@ -60,6 +60,11 @@ class Parameter
         return $this->type;
     }
 
+    public function getDefaultValue(): ?string
+    {
+        return $this->defaultValue;
+    }
+
     public function getDescription(): ?string
     {
         return $this->description;
@@ -68,7 +73,11 @@ class Parameter
     public function asPHPDocParam(): string
     {
         return "@param " .
-          ($this->flags & self::NULLABLE ? ($this->type->isMixed() ? "null|" : "?") : "") .
+          ($this->flags & self::NULLABLE
+            ? ($this->type->isMixed()
+              ? "null|"
+              : "?")
+            : "") .
           $this->type->as(Type::ABSOLUTE) .
           " \$$this->name" .
           ($this->defaultValue !== null
