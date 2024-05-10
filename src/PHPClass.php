@@ -76,7 +76,10 @@ class PHPClass
 
     public function removeProperty(Property $property): void
     {
-        $this->properties = array_filter($this->properties, fn(Property $p) => !$p->equals($property));
+        $this->properties = array_filter(
+            $this->properties,
+            fn(Property $p) => !$p->equals($property)
+        );
     }
 
     public function addMethod(Method $method): void
@@ -86,7 +89,7 @@ class PHPClass
 
     public function getMethod(string $name): ?Method
     {
-        foreach($this->methods as $method) {
+        foreach ($this->methods as $method) {
             if ($method->getName() === $name) {
                 return $method;
             }
@@ -97,7 +100,10 @@ class PHPClass
     public function removeMethod(Method $method): void
     {
         // TODO do we need to be more discerning than just matching by method name? PHP is not.
-        $this->methods = array_filter($this->methods, fn(Method $m) => $m->getName() !== $method->getName());
+        $this->methods = array_filter(
+            $this->methods,
+            fn(Method $m) => $m->getName() !== $method->getName()
+        );
     }
 
     /**
@@ -108,17 +114,29 @@ class PHPClass
     public function addUses($use): void
     {
         if (is_string($use)) {
-            $use = new Type($use);            
+            $use = new Type($use);
         }
-        assert(!$use->isArray(), new PHPGeneratorException('Cannot use an array type: ' . $use->as(Type::FQN)));
-        assert(!$use->isMixed(), new PHPGeneratorException('Cannot use a mixed type: ' . $use->as(Type::FQN)));
-        
-        foreach($this->uses as $other) {
+        assert(
+            !$use->isArray(),
+            new PHPGeneratorException(
+                "Cannot use an array type: " . $use->as(Type::FQN)
+            )
+        );
+        assert(
+            !$use->isMixed(),
+            new PHPGeneratorException(
+                "Cannot use a mixed type: " . $use->as(Type::FQN)
+            )
+        );
+
+        foreach ($this->uses as $other) {
             if ($use->equals($other)) {
                 return;
             }
         }
-        $this->uses[] = $use;
+        if ($use->isImportable()) {
+            $this->uses[] = $use;
+        }
     }
 
     public function asImplementation(): string
@@ -126,7 +144,7 @@ class PHPClass
         if ($this->baseType) {
             $this->addUses($this->baseType);
         }
-        foreach($this->methods as $method) {
+        foreach ($this->methods as $method) {
             $returnType = $method->getReturnType()->getType();
             if ($returnType->isImportable()) {
                 $this->addUses($returnType);
@@ -138,16 +156,24 @@ class PHPClass
                     $self->addUses($p->getType());
                 }
             }, $method->getParameters());
-
         }
 
         sort($this->uses);
         $uses = [];
         $remap = [];
-        foreach($this->uses as $use) {
+        foreach ($this->uses as $use) {
             if (strtolower($use->as(Type::SHORT)) === strtolower($this->name)) {
-                $remap[$use->as(Type::FQN)] = basename(dirname(str_replace('\\','/',$use->as(Type::FQN)))) . '_' .  $use->as(Type::SHORT);
-                $uses[] = "use " . $use->as(Type::FQN) . " as " . $remap[$use->as(Type::FQN)] . ";" . PHP_EOL;
+                $remap[$use->as(Type::FQN)] =
+                  basename(dirname(str_replace("\\", "/", $use->as(Type::FQN)))) .
+                  "_" .
+                  $use->as(Type::SHORT);
+                $uses[] =
+                  "use " .
+                  $use->as(Type::FQN) .
+                  " as " .
+                  $remap[$use->as(Type::FQN)] .
+                  ";" .
+                  PHP_EOL;
             } else {
                 $uses[] = "use " . $use->as(Type::FQN) . ";" . PHP_EOL;
             }
@@ -158,7 +184,7 @@ class PHPClass
             $classDoc->addItem($this->description);
         }
         $properties = [];
-        foreach($this->properties as $prop) {
+        foreach ($this->properties as $prop) {
             if ($prop->isDocumentationOnly()) {
                 $classDoc->addItem($prop->asPHPDocProperty());
             } else {
@@ -167,22 +193,45 @@ class PHPClass
         }
         $classDoc->addItem("@api");
 
-        return "<?php" . PHP_EOL . PHP_EOL .
-        "namespace " . $this->namespace . ";" . PHP_EOL . PHP_EOL .
-        (empty($uses) ? "" : join($uses) . PHP_EOL) .
-        $classDoc->asString(0) .
-        "class $this->name " . ($this->baseType !== null ? "extends " . $this->baseType->as(Type::SHORT) : "") . PHP_EOL .
-        "{" . PHP_EOL .
-        (empty($properties) ? "" : join(PHP_EOL, $properties)) .
-        (empty($this->methods) ? "" : PHP_EOL . join(PHP_EOL, array_map(fn(Method $m) => $m->asImplementation($remap), $this->methods))) .
-        "}" . PHP_EOL;
+        return "<?php" .
+          PHP_EOL .
+          PHP_EOL .
+          "namespace " .
+          $this->namespace .
+          ";" .
+          PHP_EOL .
+          PHP_EOL .
+          (empty($uses) ? "" : join($uses) . PHP_EOL) .
+          $classDoc->asString(0) .
+          "class $this->name " .
+          ($this->baseType !== null
+            ? "extends " . $this->baseType->as(Type::SHORT)
+            : "") .
+          PHP_EOL .
+          "{" .
+          PHP_EOL .
+          (empty($properties) ? "" : join(PHP_EOL, $properties)) .
+          (empty($this->methods)
+            ? ""
+            : PHP_EOL .
+              join(
+                  PHP_EOL,
+                  array_map(
+                      fn(Method $m) => $m->asImplementation($remap),
+                      $this->methods
+                  )
+              )) .
+          "}" .
+          PHP_EOL;
     }
 
     public function mergeWith(PHPClass $other): void
     {
         assert(
             $this->namespace === $other->namespace,
-            new PHPGeneratorException("Namespace mismatch on merge: $this->namespace and $other->namespace")
+            new PHPGeneratorException(
+                "Namespace mismatch on merge: $this->namespace and $other->namespace"
+            )
         );
 
         /**
@@ -191,14 +240,23 @@ class PHPClass
         if ($this->baseType !== null && $other->baseType !== null) {
             if ($other->baseType->is_a($this->baseType)) {
                 $this->baseType = $other->baseType;
-            } elseif ($this->baseType !== $other->baseType && !$this->baseType->is_a($other->baseType)) {
+            } elseif (
+                $this->baseType !== $other->baseType &&
+                !$this->baseType->is_a($other->baseType)
+            ) {
                 throw new PHPGeneratorException(
-                    "Incompatible base types in merge: " . $this->baseType->as(Type::FQN) . " and " . $other->baseType->as(Type::FQN)
+                    "Incompatible base types in merge: " .
+                    $this->baseType->as(Type::FQN) .
+                    " and " .
+                    $other->baseType->as(Type::FQN)
                 );
             }
         } else {
             throw new PHPGeneratorException(
-                "Incompatible base types in merge: " . ($this->baseType === null ? "null" : $this->baseType->as(Type::FQN)) . " and " . ($other->baseType === null ? "null" : $other->baseType->as(Type::FQN))
+                "Incompatible base types in merge: " .
+                ($this->baseType === null ? "null" : $this->baseType->as(Type::FQN)) .
+                " and " .
+                ($other->baseType === null ? "null" : $other->baseType->as(Type::FQN))
             );
         }
 
@@ -233,7 +291,7 @@ class PHPClass
           $this->description,
           $other->description,
         ]);
-        foreach($other->uses as $use) {
+        foreach ($other->uses as $use) {
             $this->addUses($use);
         }
         $this->properties = array_merge($this->properties, $other->properties);
